@@ -16,16 +16,20 @@ interface NavbarProps {
   attemptsCount?: number;
   unresolvedMistakesCount: number;
   onTriggerWhatToStudy?: () => void;
+  onExitDemo?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab: _activeTab,
   setActiveTab,
   profile,
-  isDemoMode = true,
+  isDemoMode = false,
   attemptsCount = 0,
-  unresolvedMistakesCount
+  unresolvedMistakesCount,
+  onExitDemo
 }) => {
+  const displayName = profile.name ? profile.name.split(' ')[0] : 'Student';
+
   return (
     <header className="bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-0 z-20 shadow-sm/50">
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
@@ -33,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight m-0 truncate">
-              Good Morning, {profile.name.split(' ')[0]}! 👋
+              Good Morning, {displayName}! 👋
             </h1>
             <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 font-mono">
               Class 10 • CBSE
@@ -48,14 +52,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           {/* Demo Mode / Live Intelligence Status Pill */}
           {isDemoMode ? (
-            <div 
-              title="Demo Mode: Sample data loaded. Attempt questions to see live performance tracking."
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-700 text-[11px] font-semibold font-mono"
+            <button
+              onClick={onExitDemo}
+              title="Demo Mode: Sample data active. Click to exit demo and start your personal profile."
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-700 text-[11px] font-semibold font-mono transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="hidden sm:inline">Demo Mode</span>
+              <span className="hidden sm:inline">Demo Mode (Exit)</span>
               <span className="sm:hidden">Demo</span>
-            </div>
+            </button>
           ) : (
             <div 
               title={`Live Intelligence: ${attemptsCount} attempts tracked.`}
@@ -94,11 +99,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-700 transition-all text-left group"
           >
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
-              {profile.name.charAt(0)}
+              {profile.name ? profile.name.charAt(0) : 'S'}
             </div>
             <div className="hidden md:block leading-tight">
               <div className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                {profile.name}
+                {profile.name || 'Setup Profile'}
               </div>
               <div className="text-[10px] text-slate-400 font-medium">
                 {profile.standard} CBSE
@@ -111,3 +116,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

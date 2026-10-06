@@ -59,13 +59,15 @@ describe('Readiness Engine', () => {
     expect(readinessEngine.getChapterOverallTier(weakChapter)).toBe('weak');
   });
 
-  it('handles edge case: zero attempts (marks demo mode)', () => {
+  it('handles clean baseline: zero attempts yields clean 0-state report', () => {
     const summary = readinessEngine.analyzeReadiness(INITIAL_CHAPTERS, [], [], []);
-    expect(summary.isDemo).toBe(true);
+    expect(summary.overallReadinessIndex).toBe(0);
+    expect(summary.report.tier).toBe('NOT YET READY');
     expect(summary.report.totalAttemptsCount).toBe(0);
     expect(summary.totalChapters).toBe(INITIAL_CHAPTERS.length);
     expect(summary.dimensionMetrics.length).toBe(6);
   });
+
 
   it('handles edge case: one attempt correctly updating readiness', () => {
     const singleAttempt: QuestionAttempt = {

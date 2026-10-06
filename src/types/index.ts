@@ -282,6 +282,7 @@ export interface StudentProfile {
   targetScore: number;    // e.g. 95%
   studyTimeDailyMinutes: number;
   isDemoMode: boolean;
+  hasCompletedSetup?: boolean;
 }
 
 export interface RevisionSessionConfig {

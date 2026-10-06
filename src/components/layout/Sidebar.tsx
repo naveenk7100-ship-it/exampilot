@@ -46,8 +46,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   unresolvedMistakesCount
 }) => {
   const [currentTimestamp] = useState(() => Date.now());
-  const targetTime = new Date(profile.targetExamDate).getTime();
-  const daysLeft = Math.max(0, Math.ceil((targetTime - currentTimestamp) / (1000 * 60 * 60 * 24)));
+  const hasTargetDate = Boolean(profile.targetExamDate);
+  const targetTime = hasTargetDate ? new Date(profile.targetExamDate).getTime() : 0;
+  const daysLeft = hasTargetDate && !isNaN(targetTime) && targetTime > 0
+    ? Math.max(0, Math.ceil((targetTime - currentTimestamp) / (1000 * 60 * 60 * 24)))
+    : null;
+
 
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard, badge: null },

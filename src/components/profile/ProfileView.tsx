@@ -18,6 +18,8 @@ interface ProfileViewProps {
   profile: StudentProfile;
   onSaveProfile: (profile: StudentProfile) => void;
   onResetData: () => void;
+  onLoadDemo?: () => void;
+  onExitDemo?: () => void;
 }
 
 const DEFAULT_SUBJECT_CONFIG: StudentSubjectConfig = {
@@ -32,7 +34,9 @@ const DEFAULT_SUBJECT_CONFIG: StudentSubjectConfig = {
 export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
   onSaveProfile,
-  onResetData
+  onResetData,
+  onLoadDemo,
+  onExitDemo
 }) => {
   const [formData, setFormData] = useState<StudentProfile>({
     ...profile,
@@ -80,10 +84,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveProfile(formData);
+    const studentName = formData.name.trim() || 'Student';
+    const updated: StudentProfile = {
+      ...formData,
+      name: studentName,
+      hasCompletedSetup: true
+    };
+    setFormData(updated);
+    onSaveProfile(updated);
     setIsSavedAlert(true);
     setTimeout(() => setIsSavedAlert(false), 2500);
   };
+
 
   // Export JSON backup
   const handleExportData = () => {
@@ -388,7 +400,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </h3>
         </div>
         <p className="text-xs text-slate-600 leading-relaxed m-0">
-          All your chapter readiness metrics, logged mistakes, and mock results are stored locally in your browser storage. You can export a JSON backup, restore an existing backup file, or reset to a fresh demo baseline.
+          All your chapter readiness metrics, logged mistakes, and mock results are stored locally in your browser storage. You can export a JSON backup, restore an existing backup file, explore with demo mode preview, or reset to a clean baseline.
         </p>
 
         <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -420,21 +432,43 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             className="hidden"
           />
 
+          {/* Demo Mode Toggle */}
+          {profile.isDemoMode ? (
+            <button
+              type="button"
+              onClick={onExitDemo}
+              className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors shadow-2xs"
+            >
+              <span>Exit Demo Mode (Start Clean)</span>
+            </button>
+          ) : (
+            onLoadDemo && (
+              <button
+                type="button"
+                onClick={onLoadDemo}
+                className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors shadow-2xs"
+              >
+                <span>Load Demo Mode Preview</span>
+              </button>
+            )
+          )}
+
           {/* Reset button */}
           <button
             type="button"
             onClick={() => {
-              if (window.confirm("Are you sure you want to reset all progress and revert to the fresh demo state?")) {
+              if (window.confirm("Are you sure you want to reset all data to a clean student state?")) {
                 onResetData();
               }
             }}
             className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors"
           >
             <RotateCcw size={14} />
-            <span>Reset to Fresh Demo State</span>
+            <span>Reset to Clean Student Baseline</span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+

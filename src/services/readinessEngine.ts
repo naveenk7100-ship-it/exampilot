@@ -226,8 +226,11 @@ export const readinessEngine = {
     const strongestDimension = sortedDimensions[sortedDimensions.length - 1] || dimensionMetrics[0];
 
     // Multidimensional overall index
+    const isCleanStudent = attempts.length === 0 && mistakes.length === 0 && sessions.length === 0;
     const totalScoreSum = processedChapters.reduce((acc, ch) => acc + this.calculateChapterScore(ch), 0);
-    const overallReadinessIndex = processedChapters.length > 0 ? Math.round(totalScoreSum / processedChapters.length) : 0;
+    const overallReadinessIndex = isCleanStudent 
+      ? 0 
+      : (processedChapters.length > 0 ? Math.round(totalScoreSum / processedChapters.length) : 0);
 
     // Compute Diagnostic Report & Tier (READY / ALMOST READY / NOT YET READY)
     let tier: ExamReadinessTier = 'NOT YET READY';
@@ -235,42 +238,52 @@ export const readinessEngine = {
     else if (overallReadinessIndex >= 60) tier = 'ALMOST READY';
 
     const getDimScore = (key: keyof Chapter['readiness']) => {
-      return dimensionMetrics.find(d => d.key === key)?.healthPercent || 50;
+      return dimensionMetrics.find(d => d.key === key)?.healthPercent || (isCleanStudent ? 0 : 50);
     };
 
-    const conceptScorePercent = getDimScore('conceptUnderstanding');
-    const applicationScorePercent = getDimScore('application');
-    const solvingScorePercent = getDimScore('questionSolving');
-    const writingScorePercent = getDimScore('answerWriting');
-    const timeSpeedScorePercent = getDimScore('timeSpeed');
-    const revisionScorePercent = getDimScore('revision');
+    const conceptScorePercent = isCleanStudent ? 0 : getDimScore('conceptUnderstanding');
+    const applicationScorePercent = isCleanStudent ? 0 : getDimScore('application');
+    const solvingScorePercent = isCleanStudent ? 0 : getDimScore('questionSolving');
+    const writingScorePercent = isCleanStudent ? 0 : getDimScore('answerWriting');
+    const timeSpeedScorePercent = isCleanStudent ? 0 : getDimScore('timeSpeed');
+    const revisionScorePercent = isCleanStudent ? 0 : getDimScore('revision');
 
     const reasons: string[] = [];
-    if (conceptScorePercent >= 75) {
-      reasons.push('Concept knowledge is strong and accurate across syllabus theorems.');
+    if (isCleanStudent) {
+      reasons.push('No question attempts recorded yet.');
+      reasons.push('Solve CBSE board questions to calibrate your 6-dimension readiness index.');
+      reasons.push('Mistakes, pacing, and step-by-step scoring will be tracked automatically.');
     } else {
-      reasons.push(`Concept understanding needs fortification (${conceptScorePercent}%).`);
+      if (conceptScorePercent >= 75) {
+        reasons.push('Concept knowledge is strong and accurate across syllabus theorems.');
+      } else {
+        reasons.push(`Concept understanding needs fortification (${conceptScorePercent}%).`);
+      }
+
+      if (applicationScorePercent < 70) {
+        reasons.push(`Application accuracy in case-based and scenario questions is currently ${applicationScorePercent}%.`);
+      }
+
+      if (writingScorePercent < 70) {
+        reasons.push(`Answer writing structure and unit conventions are at ${writingScorePercent}%.`);
+      }
+
+      if (timeSpeedScorePercent < 70) {
+        reasons.push(`Time pacing needs calibration (${timeSpeedScorePercent}% optimal pacing).`);
+      }
     }
 
-    if (applicationScorePercent < 70) {
-      reasons.push(`Application accuracy in case-based and scenario questions is currently ${applicationScorePercent}%.`);
-    }
-
-    if (writingScorePercent < 70) {
-      reasons.push(`Answer writing structure and unit conventions are at ${writingScorePercent}%.`);
-    }
-
-    if (timeSpeedScorePercent < 70) {
-      reasons.push(`Time pacing needs calibration (${timeSpeedScorePercent}% optimal pacing).`);
-    }
-
-    const diagnosisHeadline = tier === 'READY'
+    const diagnosisHeadline = isCleanStudent
+      ? 'Welcome to ExamPilot! Your baseline is ready. Solve practice problems or take a mock test to calibrate your 6-dimension readiness.'
+      : tier === 'READY'
       ? 'Comprehensive board exam clarity achieved across multiple question formats.'
       : tier === 'ALMOST READY'
       ? `Concept baseline is established, but ${weakestDimension.name.toLowerCase()} is capping your score potential.`
       : `Mark barriers identified in ${weakestDimension.name.toLowerCase()}. Focus on structured thinking before attempting full mock exams.`;
 
-    const highestImpactImprovement = `Your highest-impact improvement is ${weakestDimension.name.toLowerCase()} practice.`;
+    const highestImpactImprovement = isCleanStudent
+      ? 'Start with high-yield Practice questions in Mathematics or Science.'
+      : `Your highest-impact improvement is ${weakestDimension.name.toLowerCase()} practice.`;
 
     const report: ExamReadinessReport = {
       tier,
@@ -284,9 +297,10 @@ export const readinessEngine = {
       diagnosisHeadline,
       reasons,
       highestImpactImprovement,
-      isDemo,
+      isDemo: false,
       totalAttemptsCount: attempts.length
     };
+
 
     return {
       totalChapters: processedChapters.length,

@@ -18,6 +18,7 @@ import { MistakeBookView } from './components/mistakes/MistakeBookView';
 import { ExamSimulatorView } from './components/simulator/ExamSimulatorView';
 import { RevisionView } from './components/revision/RevisionView';
 import { ProfileView } from './components/profile/ProfileView';
+import { FirstUserSetupModal } from './components/profile/FirstUserSetupModal';
 import { ResultAnalysisView } from './components/simulator/ResultAnalysisView';
 import { EmptyState } from './components/common/EmptyState';
 import { BarChart3 } from 'lucide-react';
@@ -162,6 +163,26 @@ export function App() {
     setActiveTab('dashboard');
   };
 
+  const handleLoadDemo = () => {
+    const demoData = storageService.loadDemoData();
+    setProfile(demoData.profile);
+    setChapters(demoData.chapters);
+    setMistakes(demoData.mistakes);
+    setActiveTab('dashboard');
+  };
+
+  const handleExitDemo = () => {
+    const cleanData = storageService.exitDemoMode();
+    setProfile(cleanData.profile);
+    setChapters(cleanData.chapters);
+    setMistakes(cleanData.mistakes);
+    setAttempts([]);
+    setSessions([]);
+    setTestResults([]);
+    setActiveTab('dashboard');
+  };
+
+
   // Intelligent task launcher
   const handleExecuteTask = (task: SmartNextAction) => {
     if (task.actionType === 'case-based' || task.actionType === 'clarity-practice' || task.actionType === 'mistake-remedy' || task.actionType === 'answer-structure' || task.actionType === 'speed-sprint') {
@@ -217,6 +238,7 @@ export function App() {
           attemptsCount={attempts.length}
           onTriggerWhatToStudy={() => handleExecuteTask(highestImpactAction)}
           unresolvedMistakesCount={unresolvedMistakesCount}
+          onExitDemo={handleExitDemo}
         />
 
         {/* Dynamic View Body */}
@@ -336,10 +358,22 @@ export function App() {
               profile={profile}
               onSaveProfile={handleSaveProfile}
               onResetData={handleResetData}
+              onLoadDemo={handleLoadDemo}
+              onExitDemo={handleExitDemo}
             />
           )}
         </main>
       </div>
+
+      {/* First User Setup Modal (Only shown for fresh unconfigured profile) */}
+      <FirstUserSetupModal
+        isOpen={!profile.hasCompletedSetup && !profile.isDemoMode}
+        onCompleteSetup={newProfile => {
+          handleSaveProfile(newProfile);
+          setActiveTab('dashboard');
+        }}
+        onLoadDemo={handleLoadDemo}
+      />
 
       {/* Mobile-First Bottom Navigation Bar */}
       <MobileNav
@@ -352,3 +386,4 @@ export function App() {
 }
 
 export default App;
+

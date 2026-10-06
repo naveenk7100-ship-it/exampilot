@@ -10,7 +10,35 @@ const STORAGE_KEYS = {
   SESSIONS: 'exampilot_sessions_v2'
 };
 
-const DEFAULT_PROFILE: StudentProfile = {
+export function getDefaultExamDate(): string {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  // Next CBSE Class 10 Board Exam starts mid-February
+  const examYear = now.getMonth() >= 2 ? currentYear + 1 : currentYear;
+  return `${examYear}-02-15`;
+}
+
+export const CLEAN_PROFILE: StudentProfile = {
+  name: '',
+  standard: 'Class 10',
+  board: 'CBSE',
+  subjectConfig: {
+    language1: 'english-184',
+    language2: 'hindi-002',
+    mathType: 'standard-041',
+    science: true,
+    socialScience: true,
+    optionalSubject: 'none'
+  },
+  enrolledSubjects: ['mathematics', 'science', 'social-science', 'english', 'hindi'],
+  targetExamDate: getDefaultExamDate(),
+  targetScore: 90,
+  studyTimeDailyMinutes: 120,
+  isDemoMode: false,
+  hasCompletedSetup: false
+};
+
+export const DEMO_PROFILE: StudentProfile = {
   name: 'Aarav Sharma',
   standard: 'Class 10',
   board: 'CBSE',
@@ -23,14 +51,29 @@ const DEFAULT_PROFILE: StudentProfile = {
     optionalSubject: 'none'
   },
   enrolledSubjects: ['mathematics', 'science', 'social-science', 'english', 'hindi'],
-  targetExamDate: '2027-02-15',
+  targetExamDate: getDefaultExamDate(),
   targetScore: 95,
   studyTimeDailyMinutes: 120,
-  isDemoMode: true
+  isDemoMode: true,
+  hasCompletedSetup: true
 };
 
-// Seed sample mistakes for Demo mode preview
-const SEED_MISTAKES: MistakeEntry[] = [
+export const getCleanChapters = (): Chapter[] => {
+  return INITIAL_CHAPTERS.map(ch => ({
+    ...ch,
+    readiness: {
+      conceptUnderstanding: 'needs-practice',
+      application: 'needs-practice',
+      questionSolving: 'needs-practice',
+      answerWriting: 'needs-practice',
+      timeSpeed: 'needs-practice',
+      revision: 'needs-practice'
+    }
+  }));
+};
+
+// Sample mistakes used ONLY for explicit Demo Mode preview
+export const SEED_MISTAKES: MistakeEntry[] = [
   {
     id: 'mistake-seed-1',
     questionId: 'sci-q1',
@@ -89,9 +132,9 @@ export const storageService = {
   getProfile(): StudentProfile {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.PROFILE);
-      return data ? JSON.parse(data) : DEFAULT_PROFILE;
+      return data ? JSON.parse(data) : CLEAN_PROFILE;
     } catch {
-      return DEFAULT_PROFILE;
+      return CLEAN_PROFILE;
     }
   },
 
@@ -109,10 +152,9 @@ export const storageService = {
       if (data) {
         return JSON.parse(data);
       }
-      this.saveChapters(INITIAL_CHAPTERS);
-      return INITIAL_CHAPTERS;
+      return getCleanChapters();
     } catch {
-      return INITIAL_CHAPTERS;
+      return getCleanChapters();
     }
   },
 
@@ -123,6 +165,7 @@ export const storageService = {
       console.error('Failed to save chapters', e);
     }
   },
+
 
   updateChapterReadiness(chapterId: string, dimension: keyof Chapter['readiness'], status: Chapter['readiness'][keyof Chapter['readiness']]): Chapter[] {
     const chapters = this.getChapters();
@@ -209,13 +252,9 @@ export const storageService = {
   getMistakes(): MistakeEntry[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.MISTAKES);
-      if (data) {
-        return JSON.parse(data);
-      }
-      this.saveMistakes(SEED_MISTAKES);
-      return SEED_MISTAKES;
+      return data ? JSON.parse(data) : [];
     } catch {
-      return SEED_MISTAKES;
+      return [];
     }
   },
 
@@ -265,6 +304,28 @@ export const storageService = {
     }
   },
 
+  // Explicit Demo Mode loader (isolated sample preview)
+  loadDemoData(): { profile: StudentProfile; chapters: Chapter[]; mistakes: MistakeEntry[] } {
+    this.saveProfile(DEMO_PROFILE);
+    this.saveChapters(INITIAL_CHAPTERS);
+    this.saveMistakes(SEED_MISTAKES);
+    return {
+      profile: DEMO_PROFILE,
+      chapters: INITIAL_CHAPTERS,
+      mistakes: SEED_MISTAKES
+    };
+  },
+
+  // Clear demo mode and return to clean real student state
+  exitDemoMode(): { profile: StudentProfile; chapters: Chapter[]; mistakes: MistakeEntry[] } {
+    this.resetAllData();
+    return {
+      profile: CLEAN_PROFILE,
+      chapters: getCleanChapters(),
+      mistakes: []
+    };
+  },
+
   exportFullBackup(): string {
     const backup = {
       version: '1.0',
@@ -310,3 +371,4 @@ export const storageService = {
     }
   }
 };
+
